@@ -1,0 +1,204 @@
+<!-- 
+Copyright (C) 2025 solshiiki
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор Каталога</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    #fileInput {
+      margin-bottom: 10px;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #catalog {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .card {
+      width: 200px;
+      margin: 10px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: scale(1.05);
+    }
+    .card img {
+      width: 100%;
+      border-radius: 3px;
+    }
+    .card p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #333;
+    }
+    /* Адаптивность для мобильных устройств */
+    @media (max-width: 600px) {
+      .card {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Генератор Каталога</h1>
+  <input type="file" id="fileInput" multiple accept="image/*">
+  <br>
+  <button onclick="generateCatalog()">Создать каталог</button>
+  <button onclick="downloadCatalog()">Скачать каталог</button>
+  <div id="catalog"></div>
+  
+  <script>
+    function generateCatalog() {
+      const fileInput = document.getElementById('fileInput');
+      const catalog = document.getElementById('catalog');
+      catalog.innerHTML = ''; // Очистка предыдущего контента
+
+      const files = fileInput.files;
+      if (!files.length) {
+        alert("Пожалуйста, выберите файлы для создания каталога.");
+        return;
+      }
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.type.match('image.*')) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            // Создаём карточку товара
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.alt = "Изображение товара";
+
+            // Извлекаем название товара из имени файла (без расширения)
+            const titleText = file.name.replace(/\.[^/.]+$/, "");
+            const title = document.createElement('p');
+            title.textContent = titleText;
+
+            // Добавляем редактируемое описание
+            const description = document.createElement('p');
+            description.contentEditable = "true";
+            description.style.border = "1px dashed #ccc";
+            description.style.padding = "5px";
+            description.textContent = "Добавьте описание...";
+
+            // Собираем карточку
+            card.appendChild(img);
+            card.appendChild(title);
+            card.appendChild(description);
+            catalog.appendChild(card);
+          }
+          reader.readAsDataURL(file);
+        }
+      }
+    }
+
+    function downloadCatalog() {
+      const catalogContent = document.getElementById('catalog').innerHTML;
+      if (!catalogContent.trim()) {
+        alert("Каталог пуст. Пожалуйста, создайте каталог перед скачиванием.");
+        return;
+      }
+      // Формируем HTML для скачивания
+      const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Скачанный Каталог</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    #catalog {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .card {
+      width: 200px;
+      margin: 10px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .card img {
+      width: 100%;
+      border-radius: 3px;
+    }
+    .card p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #333;
+    }
+    @media (max-width: 600px) {
+      .card {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="catalog">
+    ${catalogContent}
+  </div>
+</body>
+</html>`;
+      
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'catalog.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
